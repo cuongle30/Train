@@ -6,64 +6,92 @@ var config = {
     projectId: "train-99dfb",
     storageBucket: "train-99dfb.appspot.com",
     messagingSenderId: "806108538159"
-  };
-  firebase.initializeApp(config);
+};
+firebase.initializeApp(config);
 
 // Create a variable to reference the database
 var database = firebase.database();
 
-// Initial Values
-//Train runs from 8-6pm
-var trains = [{
-    train: "Reading Railroad",
-    destination: "Baltic Avenue",
-    frequency: 10
-},
-{
-    train: "Pennsylvania Railroad",
-    destination: "Virginia Avenue",
-    frequency: 15
-},
-{
-    train: "B & O Railroad",
-    destination: "Pacific Avenue",
-    frequency: 20
-},
-{
-    train: "Short Line",
-    destination: "Boardwalk",
-    frequency: 30
-}];
-
-var currentTrain = 0;
-
-
 //Eventhandler when user submit data
-document.querySelector("#submit").addEventListener("click", function(event) {
+document.querySelector("#submit").addEventListener("click", function (event) {
     event.preventDefault();
 
     train = document.querySelector("#train-name").value.trim();
     destination = document.querySelector("#destination-input").value.trim();
     trainTime = document.querySelector("#train-time").value.trim();
     frequency = document.querySelector("#frequency-input").value.trim();
+    // Clear input values each time
+    document.querySelector("#train-name").value = "";
+    document.querySelector("#destination-input").value = "";
+    document.querySelector("#train-time").value = "";
+    document.querySelector("#frequency-input").value = "";
+    //Current Time using Moment JS
+    var currentTime = moment();
+    console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
 
-    database.ref().set({
+    //First Train time input 
+    var firstTrain = moment(trainTime, "hh:mm")
+    console.log(firstTrain)
+
+    //Get time difference
+    var timeDifference = moment().diff(firstTrain, "minutes");
+    console.log("DIFFERENCE IN TIME: " + timeDifference);
+
+    // The remainder. Difference from Frequency til next train
+    var timeRemainder = timeDifference % frequency;
+    console.log(timeRemainder);
+
+    // Minute Until Next Train
+    var minutesTillTrain = frequency - timeRemainder;
+    console.log("MINUTES TILL TRAIN: " + minutesTillTrain);
+
+    // Get next Train time
+    var nextTrain = moment().add(minutesTillTrain, "minutes").format("hh:mm A");
+    console.log("ARRIVAL TIME: " + nextTrain);
+
+    //Store train data in firebase using push
+    database.ref().push({
         train: train,
         destination: destination,
         trainTime: trainTime,
-        frequency: frequency
+        frequency: frequency,
+        minutesTillTrain: minutesTillTrain,
+        nextTrain: nextTrain,
+        currentTime: currentTime.format("hh:mm A")
     });
 });
-//Function to get a snapshot of the stored data usng Firebase
-database.ref().on("value", function(snapshot) {
-//Display in HtML
-document.querySelector("#train-name-here").innerHTML = snapshot.val().train;
-document.querySelector("#destination-here").innerHTML = snapshot.val().destination;
-// document.querySelector("#frequency-display").innerHTML = snapshot.val();// Not sure
-// document.querySelector("#arrival-display").innerHTML = snapshot.val();
-// document.querySelector("#minaway-display").innerHTML = snapshot.val();
+//Function to get a childSnapshot of the stored data usng Firebase
+database.ref().on("child_added", function (childSnapshot) {
+    //Store data into variable
+    var trainName = childSnapshot.val().train;
+    var destination = childSnapshot.val().destination;
+    var frequency = childSnapshot.val().frequency;
+    var nextTrain = childSnapshot.val().nextTrain
+    var minutesTillTrain = childSnapshot.val().minutesTillTrain;
+    //Create new row
+    var newRow = document.createElement("tr");
 
- // Handle the errors
-}, function(errorObject) {
+    var trainData = {
+        trainName: trainName,
+        destination: destination,
+        frequency: frequency,
+        nextTrain: nextTrain,
+        minutesTillTrain: minutesTillTrain,
+    }
+    //Loop through trainData object
+    for (let value of Object.values(trainData)) {
+        let td = document.createElement("td")
+        td.innerText = value;
+
+        //append data to html
+        newRow.appendChild(td);
+        document.querySelector("#train-table > tbody").appendChild(newRow);
+    }
+    // Handle the errors
+}, function (errorObject) {
     console.log(`Errors handled: ${errorObject.code}`);
-  });
+
+});
+
+
+//moment("1800", "hmm").format("H:mm") >= moment("1123", "hmm").add(700, "m").format("H:mm")
