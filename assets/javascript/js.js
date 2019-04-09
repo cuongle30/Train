@@ -27,27 +27,22 @@ document.querySelector("#submit").addEventListener("click", function (event) {
     document.querySelector("#frequency-input").value = "";
     //Current Time using Moment JS
     var currentTime = moment();
-    console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+    console.log("current ime: " + moment(currentTime).format("hh:mm"));
 
     //First Train time input 
     var firstTrain = moment(trainTime, "hh:mm")
-    console.log(firstTrain)
 
     //Get time difference
     var timeDifference = moment().diff(firstTrain, "minutes");
-    console.log("DIFFERENCE IN TIME: " + timeDifference);
 
     // The remainder. Difference from Frequency til next train
     var timeRemainder = timeDifference % frequency;
-    console.log(timeRemainder);
 
     // Minute Until Next Train
     var minutesTillTrain = frequency - timeRemainder;
-    console.log("MINUTES TILL TRAIN: " + minutesTillTrain);
-
+    
     // Get next Train time
     var nextTrain = moment().add(minutesTillTrain, "minutes").format("hh:mm A");
-    console.log("ARRIVAL TIME: " + nextTrain);
 
     //Store train data in firebase using push
     database.ref().push({
