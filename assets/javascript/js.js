@@ -29,8 +29,8 @@ document.querySelector("#submit").addEventListener("click", function (event) {
     var currentTime = moment();
     console.log("current ime: " + moment(currentTime).format("hh:mm"));
 
-    //First Train time input 
-    var firstTrain = moment(trainTime, "hh:mm")
+    //First Train time input. Subtract 1 day to get exact minute if train start after current hours
+    var firstTrain = moment(trainTime, "hh:mm").subtract(1, "days")
 
     //Get time difference
     var timeDifference = moment().diff(firstTrain, "minutes");
